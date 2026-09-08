@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #020617;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+@layer components {
+  .nav-item {
+    @apply flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-slate-400 transition duration-200 hover:bg-white/[0.07] hover:text-slate-50;
+  }
+
+  .nav-item-active {
+    @apply bg-cyan-300/10 text-cyan-100 ring-1 ring-cyan-200/20;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold text-slate-50;
+  }
+
+  .section-copy {
+    @apply mt-1 text-sm leading-6 text-slate-400;
+  }
+
+  .drop-zone {
+    @apply mt-5 flex min-h-72 flex-col items-center justify-center gap-5 rounded-lg border border-dashed border-white/15 bg-black/25 p-5 text-center transition duration-200 hover:border-cyan-200/50 hover:bg-cyan-300/5 sm:min-h-80;
+  }
+
+  .drop-zone-active {
+    @apply border-cyan-200/70 bg-cyan-300/10;
+  }
+
+  .primary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-200 px-5 py-3 text-sm font-semibold text-slate-950 transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-100 active:translate-y-0;
+  }
+
+  .mic-button {
+    @apply inline-flex w-full items-center justify-center gap-3 rounded-lg border border-cyan-200/25 bg-cyan-300/10 px-5 py-4 font-semibold text-cyan-100 transition duration-200 hover:bg-cyan-300/15 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto;
+  }
+
+  .mic-button-recording {
+    @apply border-rose-300/40 bg-rose-500/15 text-rose-100 shadow-[0_0_32px_rgba(244,63,94,0.18)];
+  }
+
+  .secondary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 text-sm font-semibold text-slate-100 transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+}

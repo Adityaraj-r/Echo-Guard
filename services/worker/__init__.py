@@ -1,0 +1,1 @@
+"""Audio processing worker service."""

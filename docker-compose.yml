@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ENVIRONMENT: production
+      MONGODB_URL: mongodb://mongo:27017
+      DATABASE_NAME: echoguard
+      CORS_ORIGINS: http://localhost:8080
+      ALLOWED_HOSTS: localhost,127.0.0.1,api
+      UPLOAD_DIR: /data/uploads
+      TEMP_AUDIO_DIR: /data/temp_audio
+      TEMP_IMAGE_DIR: /data/temp_images
+      FFMPEG_PATH: /usr/bin
+      MODEL_WEIGHTS_PATH: /models/echoguard_weights.pth
+      MODEL_FAKE_CLASS_INDEX: 0
+      MODEL_HUMAN_CLASS_INDEX: 1
+      MODEL_FAKE_THRESHOLD: 0.75
+      MAX_UPLOAD_SIZE_MB: 25
+    volumes:
+      - uploads:/data/uploads
+      - temp-audio:/data/temp_audio
+      - temp-images:/data/temp_images
+      - ./echoguard_weights.pth:/models/echoguard_weights.pth:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+
+  
