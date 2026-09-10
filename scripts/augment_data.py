@@ -10,3 +10,9 @@ audio_files = glob.glob("elevenlabs_raw/*.wav") + glob.glob("elevenlabs_raw/*.mp
 
 print(f"⚙️ Found {len(audio_files)} ElevenLabs files. Converting...")
 
+for i, audio_path in enumerate(audio_files):
+    output_path = f"elevenlabs_specs/elevenlabs_fake_{i}.png"
+    generate_spectrogram(audio_path, output_path)
+    print(f"   Converted {i+1}/{len(audio_files)}")
+
+print("✅ All ElevenLabs deepfakes converted to spectrograms!")
