@@ -24,7 +24,12 @@ export default defineConfig({
     hmr: {
       host: host === "0.0.0.0" ? undefined : host,
     },
-   
+     proxy: {
+      "/api": {
+        target: apiTarget,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
       "/assets": {
         target: apiTarget,
         changeOrigin: true,
