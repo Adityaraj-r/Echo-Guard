@@ -14,7 +14,14 @@ if uploaded_file is not None:
     # Play the audio in the UI
     st.audio(uploaded_file, format='audio/wav')
 
-            
+    if st.button("Scan Audio for Deepfakes"):
+        # Cool loading animation for the presentation
+        progress_text = "Extracting Mel-Spectrogram & analyzing frequencies..."
+        my_bar = st.progress(0, text=progress_text)
+        for percent_complete in range(100):
+            time.sleep(0.01)
+            my_bar.progress(percent_complete + 1, text=progress_text)
+        
         # Send the file to your FastAPI backend
         files = {"audio_file": (uploaded_file.name, uploaded_file, "audio/wav")}
         

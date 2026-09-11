@@ -77,6 +77,19 @@ def fit_temperature(logits, labels):
     return best_temp, best_nll
 
 
+def evaluate(model, loader, device):
+    model.eval()
+    logits, labels = [], []
+    with torch.no_grad():
+        for x, y in loader:
+            x = x.to(device)
+            out = model(x).cpu().numpy()
+            logits.extend(out.tolist())
+            labels.extend(y.numpy().tolist())
+    probs = torch.softmax(torch.tensor(logits), dim=1).numpy()
+    preds = probs.argmax(axis=1)
+    auc = roc_auc_score(labels, probs[:, MODEL_FAKE_CLASS_INDEX]) if len(set(labels)) == 2 else 0.0
+    return np.asarray(logits), np.asarray(labels), preds, auc
 
 
     output_dir = Path(args.output_dir)
