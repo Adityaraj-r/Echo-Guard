@@ -7,7 +7,7 @@ export default {
         surface: "#020617",
         panel: "#0f172a",
         panelSoft: "#111827",
-         borderSoft: "rgba(255,255,255,0.1)",
+        borderSoft: "rgba(255,255,255,0.1)",
         textMain: "#F8FAFC",
         textMuted: "#94A3B8",
         real: "#34D399",

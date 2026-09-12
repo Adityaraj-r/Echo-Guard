@@ -10,6 +10,7 @@ st.markdown("Upload a suspicious voice clip to analyze its acoustic fingerprint 
 
 # File Uploader
 uploaded_file = st.file_uploader("Upload Audio (.wav)", type=["wav"])
+
 if uploaded_file is not None:
     # Play the audio in the UI
     st.audio(uploaded_file, format='audio/wav')
@@ -49,5 +50,8 @@ if uploaded_file is not None:
                 
             else:
                 st.error(f"Backend Error: {response.status_code}")
-                
+
+         except requests.exceptions.ConnectionError:
+            st.error("Could not connect to backend. Is FastAPI running on port 8000?")
+        
        
