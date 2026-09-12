@@ -38,3 +38,18 @@ services:
       - "8080:80"
     depends_on:
       - api
+   mongo:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_DATABASE: echoguard
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  uploads:
+  temp-audio:
+  temp-images:
+  mongo-data:
+    

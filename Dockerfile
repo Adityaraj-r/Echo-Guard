@@ -20,6 +20,10 @@ RUN pip install --no-cache-dir -r requirements-prod.txt
 
 COPY . .
 
+RUN useradd --create-home --shell /usr/sbin/nologin appuser \
+    && mkdir -p /data/uploads /data/temp_audio /data/temp_images \
+    && chown -R appuser:appuser /data
+
 USER appuser
 
 EXPOSE 8000
