@@ -11,6 +11,10 @@ class DatabaseUnavailable(RuntimeError):
     pass
 
 
+def _require_database() -> None:
+    if not is_database_ready():
+        raise DatabaseUnavailable("MongoDB is not connected. Start MongoDB or update MONGODB_URL in .env.")
+
 
 
 

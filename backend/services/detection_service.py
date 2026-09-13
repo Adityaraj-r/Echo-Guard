@@ -15,7 +15,10 @@ def analyze_audio_file(original_path: Path, filename: str, is_live_recording: bo
         "processed audio filename=%s normalized_path=%s duration=%s sample_rate=%s channels=%s processing_time=%s",
         filename,
         processed["normalized_path"],
-       
+        processed["metadata"].get("duration"),
+        processed["metadata"].get("sample_rate"),
+        processed["metadata"].get("channels"),
+        processed["processing_time"],
     )
 
     model_image_path = TEMP_IMAGE_DIR / f"model_{processed['normalized_path'].stem}.png"
@@ -49,7 +52,17 @@ def analyze_audio_file(original_path: Path, filename: str, is_live_recording: bo
         "original_format": processed["original_format"],
         "prediction": prediction,
         "verdict": verdict,
-       
+        "confidence": round(confidence, 2),
+        "fake_probability": round(fake_probability, 4),
+        "human_probability": round(human_probability, 4),
+        "risk_level": risk_level,
+        "is_uncertain": analysis.get("is_uncertain", prediction == "uncertain"),
+        "explanation": analysis.get("explanation"),
+        "anomalies": analysis.get("anomalies", []),
+        "forensic_features": analysis.get("forensic_features", {}),
+        "analysis": analysis,
+        "waveform": processed["waveform"],
+        "waveform_image_url": processed["waveform_image_url"],
         "waveform_image_path": str(processed["waveform_image_path"]),
         "spectrogram_url": processed["spectrogram_url"],
         "spectrogram_path": str(processed["spectrogram_path"]),

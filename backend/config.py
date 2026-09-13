@@ -17,7 +17,10 @@ def _csv_env(name: str, default: str = "") -> list[str]:
     return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
 
-
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "echoguard")
+FFMPEG_PATH = os.getenv("FFMPEG_PATH", "")
+FFPROBE_PATH = os.getenv("FFPROBE_PATH", "")
 
 
 def _default_model_weights_path() -> Path:
