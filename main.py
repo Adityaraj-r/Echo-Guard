@@ -16,7 +16,15 @@ from backend.config import (
     ensure_directories,
 )
 
-
+app = FastAPI(
+    title=API_TITLE,
+    version=API_VERSION,
+    lifespan=lifespan,
+    docs_url=None if IS_PRODUCTION else "/docs",
+    redoc_url=None if IS_PRODUCTION else "/redoc",
+    openapi_url=None if IS_PRODUCTION else "/openapi.json",
+)
+ 
 
 if ALLOWED_HOSTS != ["*"]:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
