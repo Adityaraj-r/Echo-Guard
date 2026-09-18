@@ -16,6 +16,11 @@ def _require_database() -> None:
         raise DatabaseUnavailable("MongoDB is not connected. Start MongoDB or update MONGODB_URL in .env.")
 
 
+def serialize_detection(detection: Detection) -> dict[str, Any]:
+    data = detection.model_dump(mode="json")
+    data["id"] = str(detection.id)
+    data.pop("_id", None)
+    return data
 
 
 async def create_detection(payload: dict[str, Any]) -> Detection:
@@ -65,3 +70,9 @@ async def get_detection(detection_id: str) -> Detection | None:
     return await Detection.get(ObjectId(detection_id))
 
 
+async def delete_detection(detection_id: str) -> bool:
+    detection = await get_detection(detection_id)
+    if not detection:
+        return False
+    await detection.delete()
+    return True
