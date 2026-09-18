@@ -37,7 +37,11 @@ def analyze_audio_file(original_path: Path, filename: str, is_live_recording: bo
         {
             "verdict": analysis.get("verdict"),
             "prediction": analysis.get("prediction"),
-            
+            "confidence": analysis.get("confidence"),
+            "fake_probability": analysis.get("fake_probability"),
+            "human_probability": analysis.get("human_probability"),
+            "risk_level": analysis.get("risk_level"),
+            "is_uncertain": analysis.get("is_uncertain"),
         },
     )
     fake_probability = float(analysis.get("fake_probability", 0))

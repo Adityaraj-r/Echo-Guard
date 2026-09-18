@@ -92,6 +92,15 @@ def evaluate(model, loader, device):
     return np.asarray(logits), np.asarray(labels), preds, auc
 
 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--manifest", required=True, help="CSV with columns: path,label. label: human/fake")
+    parser.add_argument("--output-dir", default="runs/echoguard_hybrid")
+    parser.add_argument("--epochs", type=int, default=30)
+    parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--lr", type=float, default=2e-4)
+    args = parser.parse_args()
+
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     rows = load_manifest(Path(args.manifest))
