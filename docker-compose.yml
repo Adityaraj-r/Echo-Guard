@@ -38,8 +38,8 @@ services:
       - "8080:80"
     depends_on:
       - api
-      
-    mongo:
+
+  mongo:
     image: mongo:7
     environment:
       MONGO_INITDB_DATABASE: echoguard
@@ -53,4 +53,3 @@ volumes:
   temp-audio:
   temp-images:
   mongo-data:
-    
