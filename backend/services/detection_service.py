@@ -2,8 +2,9 @@ from pathlib import Path
 import logging
 
 from backend.preprocessing.audio_processor import generate_spectrogram
-from backend.config import MODEL_DURATION_SECONDS, TEMP_IMAGE_DIR
+from backend.config import MODEL_DURATION_SECONDS, MODEL_SPECTROGRAM_MODE, TEMP_IMAGE_DIR
 from backend.preprocessing.audio_pipeline import process_audio
+from backend.preprocessing.legacy_spectrogram import generate_legacy_mel_spectrogram
 from backend.ml.model_inference import analyze_audio_forensics
 
 logger = logging.getLogger("echoguard.detection")
@@ -22,11 +23,18 @@ def analyze_audio_file(original_path: Path, filename: str, is_live_recording: bo
     )
 
     model_image_path = TEMP_IMAGE_DIR / f"model_{processed['normalized_path'].stem}.png"
-    generated_model_image = generate_spectrogram(
-        str(processed["normalized_path"]),
-        str(model_image_path),
-        duration=MODEL_DURATION_SECONDS,
-    )
+    if MODEL_SPECTROGRAM_MODE == "legacy_mel":
+        generated_model_image = generate_legacy_mel_spectrogram(
+            str(original_path),
+            str(model_image_path),
+            duration=MODEL_DURATION_SECONDS,
+        )
+    else:
+        generated_model_image = generate_spectrogram(
+            str(processed["normalized_path"]),
+            str(model_image_path),
+            duration=MODEL_DURATION_SECONDS,
+        )
     if not generated_model_image:
         raise RuntimeError("Failed to generate model spectrogram.")
 

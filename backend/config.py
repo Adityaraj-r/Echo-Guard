@@ -34,6 +34,9 @@ def _default_model_weights_path() -> Path:
 MODEL_WEIGHTS_PATH = Path(os.getenv("MODEL_WEIGHTS_PATH", _default_model_weights_path())).resolve()
 MODEL_FAKE_CLASS_INDEX = int(os.getenv("MODEL_FAKE_CLASS_INDEX", "0"))
 MODEL_HUMAN_CLASS_INDEX = int(os.getenv("MODEL_HUMAN_CLASS_INDEX", os.getenv("MODEL_REAL_CLASS_INDEX", "1")))
+MODEL_SPECTROGRAM_MODE = os.getenv("MODEL_SPECTROGRAM_MODE", "new").strip().lower()
+if MODEL_SPECTROGRAM_MODE not in {"new", "legacy_mel"}:
+    raise ValueError("MODEL_SPECTROGRAM_MODE must be 'new' or 'legacy_mel'.")
 MODEL_FAKE_THRESHOLD = float(os.getenv("MODEL_FAKE_THRESHOLD", "0.65"))
 MODEL_HUMAN_THRESHOLD = float(os.getenv("MODEL_HUMAN_THRESHOLD", "0.35"))
 MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "2.5"))

@@ -51,7 +51,7 @@ if uploaded_file is not None:
             else:
                 st.error(f"Backend Error: {response.status_code}")
 
-         except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError:
             st.error("Could not connect to backend. Is FastAPI running on port 8000?")
         
        

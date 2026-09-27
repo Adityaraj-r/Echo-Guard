@@ -154,6 +154,9 @@ def main():
             if bad_epochs >= patience:
                 break
 
+    best_checkpoint = torch.load(output_dir / "echoguard_hybrid_weights.pth", map_location=device)
+    model.load_state_dict(best_checkpoint["model_state_dict"])
+
     logits, labels, preds, auc = evaluate(model, val_loader, device)
     temperature, nll = fit_temperature(logits, labels)
     (output_dir / "calibration.json").write_text(json.dumps({"temperature": temperature, "nll": nll}, indent=2), encoding="utf-8")
