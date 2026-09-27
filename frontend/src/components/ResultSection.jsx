@@ -41,7 +41,9 @@ export default function ResultSection({ result, isAnalyzing, progress, audioUrl,
             {result.isUncertain && (
               <div className="rounded-lg border border-amber-300/30 bg-amber-400/10 p-4 text-amber-100">
                 <p className="font-semibold">Uncertain prediction</p>
-                <p className="mt-1 text-sm text-amber-100/80">{result.explanation || "Score is inside the 35-65% uncertainty band."}</p>
+                <p className="mt-1 text-sm text-amber-100/80">
+                  {result.explanation || "The backend marked this result uncertain. Review the probabilities and request more audio or corroborating evidence."}
+                </p>
               </div>
             )}
 
@@ -75,6 +77,17 @@ export default function ResultSection({ result, isAnalyzing, progress, audioUrl,
             )}
 
             <Metadata metadata={result.metadata} />
+            {result.databaseWarning && (
+              <div role="status" className="rounded-lg border border-amber-300/30 bg-amber-400/10 p-3 text-sm text-amber-100">
+                <p className="font-semibold">Analysis completed successfully.</p>
+                <p className="mt-1">History warning: {result.databaseWarning}</p>
+              </div>
+            )}
+            {result.untrainedModel && (
+              <div role="alert" className="rounded-lg border border-rose-300/30 bg-rose-500/10 p-3 text-sm text-rose-100">
+                Untrained development test mode is enabled. This prediction is not a trained-model result.
+              </div>
+            )}
           </motion.div>
         ) : (
           <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid min-h-64 place-items-center rounded-lg border border-dashed border-white/15 bg-black/20 p-8 text-center">

@@ -12,7 +12,8 @@ from backend.config import (
     API_VERSION,
     CORS_ORIGINS,
     IS_PRODUCTION,
-    UPLOAD_DIR,
+    SPECTROGRAM_DIR,
+    WAVEFORM_DIR,
     ensure_directories,
 )
 
@@ -44,5 +45,6 @@ async def root():
     return {"service": "echoguard-api", "status": "ok"}
 
 ensure_directories()
-app.mount("/assets", StaticFiles(directory=str(UPLOAD_DIR)), name="assets")
+app.mount("/assets/waveforms", StaticFiles(directory=str(WAVEFORM_DIR)), name="waveforms")
+app.mount("/assets/spectrograms", StaticFiles(directory=str(SPECTROGRAM_DIR)), name="spectrograms")
 app.include_router(router)

@@ -3,6 +3,7 @@ import { deleteDetection, fetchDetections } from "../services/api.js";
 
 export function useDetections(onError) {
   const [history, setHistory] = useState([]);
+  const [deletionEnabled, setDeletionEnabled] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState("");
 
@@ -12,6 +13,7 @@ export function useDetections(onError) {
     try {
       const response = await fetchDetections({ limit: 20 });
       setHistory(response.items);
+      setDeletionEnabled(response.deletion_enabled !== false);
     } catch (exception) {
       const message = exception.message || "Could not load detection history.";
       setHistoryError(message);
@@ -41,6 +43,7 @@ export function useDetections(onError) {
 
   return {
     history,
+    deletionEnabled,
     historyError,
     isLoadingHistory,
     loadHistory,

@@ -46,17 +46,22 @@ async def persist_upload(upload: UploadFile) -> Path:
 
     destination = AUDIO_DIR / filename
     bytes_written = 0
-    with destination.open("wb") as buffer:
-        while chunk := upload.file.read(1024 * 1024):
-            bytes_written += len(chunk)
-            if bytes_written > MAX_UPLOAD_BYTES:
-                buffer.close()
-                destination.unlink(missing_ok=True)
-                raise AudioPipelineError(
-                    "Uploaded audio file is too large.",
-                    f"Maximum upload size is {MAX_UPLOAD_SIZE_MB} MB.",
-                )
-            buffer.write(chunk)
+    created = False
+    try:
+        with destination.open("xb") as buffer:
+            created = True
+            while chunk := upload.file.read(1024 * 1024):
+                bytes_written += len(chunk)
+                if bytes_written > MAX_UPLOAD_BYTES:
+                    raise AudioPipelineError(
+                        "Uploaded audio file is too large.",
+                        f"Maximum upload size is {MAX_UPLOAD_SIZE_MB} MB.",
+                    )
+                buffer.write(chunk)
+    except BaseException:
+        if created:
+            destination.unlink(missing_ok=True)
+        raise
     logger.info(
         "persisted upload filename=%s content_type=%s bytes=%s path=%s",
         filename,

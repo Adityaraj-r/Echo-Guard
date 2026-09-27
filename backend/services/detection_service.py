@@ -5,7 +5,8 @@ from backend.preprocessing.audio_processor import generate_spectrogram
 from backend.config import MODEL_DURATION_SECONDS, MODEL_SPECTROGRAM_MODE, TEMP_IMAGE_DIR
 from backend.preprocessing.audio_pipeline import process_audio
 from backend.preprocessing.legacy_spectrogram import generate_legacy_mel_spectrogram
-from backend.ml.model_inference import analyze_audio_forensics
+from backend.ml.readiness import ModelNotReadyError, set_model_readiness
+from backend.services.detection_files import cleanup_model_image
 
 logger = logging.getLogger("echoguard.detection")
 
@@ -38,7 +39,16 @@ def analyze_audio_file(original_path: Path, filename: str, is_live_recording: bo
     if not generated_model_image:
         raise RuntimeError("Failed to generate model spectrogram.")
 
-    analysis = analyze_audio_forensics(processed["normalized_path"], generated_model_image)
+    try:
+        from backend.ml.model_inference import analyze_audio_forensics
+    except Exception as exc:
+        set_model_readiness("runtime_unavailable", False)
+        raise ModelNotReadyError("The model runtime is unavailable.") from exc
+
+    try:
+        analysis = analyze_audio_forensics(processed["normalized_path"], generated_model_image)
+    finally:
+        cleanup_model_image(model_image_path)
     logger.info(
         "model inference filename=%s response=%s",
         filename,
@@ -62,6 +72,7 @@ def analyze_audio_file(original_path: Path, filename: str, is_live_recording: bo
     return {
         "filename": filename,
         "original_format": processed["original_format"],
+        "_uploaded_audio_path": str(processed["original_path"]),
         "prediction": prediction,
         "verdict": verdict,
         "confidence": round(confidence, 2),
@@ -73,6 +84,8 @@ def analyze_audio_file(original_path: Path, filename: str, is_live_recording: bo
         "anomalies": analysis.get("anomalies", []),
         "forensic_features": analysis.get("forensic_features", {}),
         "analysis": analysis,
+        "model_status": analysis.get("model_status"),
+        "untrained_model": analysis.get("untrained_model", False),
         "waveform": processed["waveform"],
         "waveform_image_url": processed["waveform_image_url"],
         "waveform_image_path": str(processed["waveform_image_path"]),
@@ -96,10 +109,13 @@ def build_detection_document_payload(result: dict) -> dict:
         "is_uncertain": result.get("is_uncertain"),
         "anomalies": result.get("anomalies"),
         "forensic_features": result.get("forensic_features"),
+        "model_status": result.get("model_status"),
+        "untrained_model": result.get("untrained_model", False),
     }
     return {
         "filename": result.get("filename", "unknown"),
         "original_format": result.get("original_format"),
+        "uploaded_audio_path": result.get("_uploaded_audio_path"),
         "converted_wav_path": result.get("converted_wav_path"),
         "waveform_image": result.get("waveform_image_url"),
         "spectrogram_image": result.get("spectrogram_url"),

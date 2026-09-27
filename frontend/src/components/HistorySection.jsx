@@ -1,6 +1,6 @@
 import { RefreshCw, Trash2 } from "lucide-react";
 
-export default function HistorySection({ history, isLoading = false, error = "", onRefresh, onDelete }) {
+export default function HistorySection({ history, deletionEnabled = true, isLoading = false, error = "", onRefresh, onDelete }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
@@ -22,14 +22,27 @@ export default function HistorySection({ history, isLoading = false, error = "",
         ) : history.length === 0 ? (
           <p className="text-sm text-slate-400">No stored detections yet. Analyze audio to create the first record.</p>
         ) : (
-          history.map((item) => <HistoryRow key={item.id} item={item} onDelete={() => onDelete?.(item.id)} />)
+          history.map((item) => (
+            <HistoryRow
+              key={item.id}
+              item={item}
+              deletionEnabled={deletionEnabled}
+              onDelete={() => onDelete?.(item.id)}
+            />
+          ))
         )}
       </div>
     </div>
   );
 }
 
-function HistoryRow({ item, onDelete }) {
+function HistoryRow({ item, deletionEnabled, onDelete }) {
+  const badge = item.isUncertain
+    ? { label: "UNCERTAIN", className: "bg-amber-400/15 text-amber-200" }
+    : item.isFake
+      ? { label: "FAKE", className: "bg-rose-400/15 text-rose-200" }
+      : { label: "HUMAN", className: "bg-emerald-400/15 text-emerald-200" };
+
   return (
     <div className="grid gap-3 rounded-lg border border-white/10 bg-black/25 p-3 md:grid-cols-[96px_96px_minmax(0,1fr)_auto] md:items-center">
       <Thumb src={item.waveformImageUrl} label="Waveform" />
@@ -38,9 +51,14 @@ function HistoryRow({ item, onDelete }) {
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate font-medium text-slate-100">{item.filename}</p>
-          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.isFake ? "bg-rose-400/15 text-rose-200" : "bg-emerald-400/15 text-emerald-200"}`}>
-            {item.isFake ? "FAKE" : "HUMAN"}
+          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badge.className}`}>
+            {badge.label}
           </span>
+          {item.untrainedModel && (
+            <span className="rounded-full bg-amber-300/15 px-2 py-0.5 text-xs font-semibold text-amber-100">
+              UNTRAINED TEST
+            </span>
+          )}
           {item.isLiveRecording && <span className="rounded-full bg-cyan-300/10 px-2 py-0.5 text-xs font-semibold text-cyan-100">LIVE</span>}
         </div>
         <p className="mt-1 text-sm text-slate-500">{item.time}</p>
@@ -49,10 +67,12 @@ function HistoryRow({ item, onDelete }) {
         </p>
       </div>
 
-      <button className="secondary-button justify-self-start text-rose-100 md:justify-self-end" onClick={onDelete}>
-        <Trash2 size={16} />
-        Delete
-      </button>
+      {deletionEnabled && (
+        <button className="secondary-button justify-self-start text-rose-100 md:justify-self-end" onClick={onDelete}>
+          <Trash2 size={16} />
+          Delete
+        </button>
+      )}
     </div>
   );
 }

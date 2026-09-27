@@ -34,5 +34,9 @@ def categorize_prediction(fake_probability: float) -> dict:
         "confidence": round(max(fake_percent, human_percent), 2),
         "ui_color": "amber",
         "is_uncertain": True,
-        "explanation": "The score falls in the 35-65% uncertainty band. Request more audio or corroborating evidence.",
+            "explanation": (
+                f"The calibrated fake probability is between the human threshold "
+                f"({MODEL_HUMAN_THRESHOLD:.0%}) and fake threshold ({MODEL_FAKE_THRESHOLD:.0%}). "
+                "Request more audio or corroborating evidence."
+            ),
     }

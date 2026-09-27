@@ -13,6 +13,13 @@ API_TITLE = os.getenv("API_TITLE", "EchoGuard API")
 API_VERSION = os.getenv("API_VERSION", "2.0.0")
 
 
+def _bool_env(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _csv_env(name: str, default: str = "") -> list[str]:
     return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
@@ -32,6 +39,7 @@ def _default_model_weights_path() -> Path:
 
 
 MODEL_WEIGHTS_PATH = Path(os.getenv("MODEL_WEIGHTS_PATH", _default_model_weights_path())).resolve()
+ALLOW_UNTRAINED_MODEL = _bool_env("ALLOW_UNTRAINED_MODEL", False)
 MODEL_FAKE_CLASS_INDEX = int(os.getenv("MODEL_FAKE_CLASS_INDEX", "0"))
 MODEL_HUMAN_CLASS_INDEX = int(os.getenv("MODEL_HUMAN_CLASS_INDEX", os.getenv("MODEL_REAL_CLASS_INDEX", "1")))
 MODEL_SPECTROGRAM_MODE = os.getenv("MODEL_SPECTROGRAM_MODE", "new").strip().lower()
@@ -42,6 +50,7 @@ MODEL_HUMAN_THRESHOLD = float(os.getenv("MODEL_HUMAN_THRESHOLD", "0.35"))
 MODEL_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "2.5"))
 MODEL_FUSION_CNN_WEIGHT = float(os.getenv("MODEL_FUSION_CNN_WEIGHT", "0.35"))
 MODEL_LEGACY_ONLY_CNN_WEIGHT = float(os.getenv("MODEL_LEGACY_ONLY_CNN_WEIGHT", "0.2"))
+ENABLE_DETECTION_DELETE = _bool_env("ENABLE_DETECTION_DELETE", not IS_PRODUCTION)
 ENHANCED_MODEL_WEIGHTS_PATH = Path(os.getenv("ENHANCED_MODEL_WEIGHTS_PATH", BASE_DIR / "echoguard_hybrid_weights.pth")).resolve()
 CALIBRATION_PATH = Path(os.getenv("CALIBRATION_PATH", BASE_DIR / "calibration.json")).resolve()
 
@@ -49,7 +58,11 @@ CORS_ORIGINS = _csv_env(
     "CORS_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000",
 )
-ALLOWED_HOSTS = _csv_env("ALLOWED_HOSTS", "*")
+if "*" in CORS_ORIGINS:
+    raise ValueError("CORS_ORIGINS must list explicit origins when credentialed CORS is enabled.")
+ALLOWED_HOSTS = _csv_env("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
+if IS_PRODUCTION and (not ALLOWED_HOSTS or "*" in ALLOWED_HOSTS):
+    raise ValueError("ALLOWED_HOSTS must contain explicit hostnames in production.")
 
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", BASE_DIR / "uploads")).resolve()
 AUDIO_DIR = UPLOAD_DIR / "audio"

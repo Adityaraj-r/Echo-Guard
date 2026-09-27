@@ -70,8 +70,8 @@ function getErrorMessage(data, fallback) {
 function normalizeResult(data) {
   const fakeProbability = normalizeProbability(data.fake_probability ?? data.analysis?.fake_probability ?? 0);
   const humanProbability = normalizeProbability(data.human_probability ?? data.analysis?.human_probability ?? 0);
-  const verdict = normalizeVerdict(data.verdict, data.prediction, fakeProbability, humanProbability);
-  const confidence = normalizeConfidence(data.confidence, verdict === "Fake" ? fakeProbability : humanProbability);
+  const verdict = normalizeVerdict(data.verdict, data.prediction);
+  const confidence = normalizeConfidence(data.confidence, confidenceProbability(verdict, fakeProbability, humanProbability));
 
   return {
     filename: data.filename,
@@ -82,7 +82,9 @@ function normalizeResult(data) {
     confidenceScore: Math.round(confidence),
     fakeProbability: Math.round(fakeProbability * 100),
     humanProbability: Math.round(humanProbability * 100),
-    riskLevel: data.risk_level ?? data.analysis?.risk_level ?? riskFromFakeProbability(fakeProbability),
+    riskLevel: data.risk_level ?? data.analysis?.risk_level ?? riskFromVerdict(verdict),
+    databaseWarning: data.database_warning ?? "",
+    untrainedModel: Boolean(data.untrained_model ?? data.analysis?.untrained_model),
     explanation: data.explanation ?? data.analysis?.explanation ?? "",
     anomalies: data.anomalies ?? data.analysis?.anomalies ?? [],
     forensicFeatures: data.forensic_features ?? data.analysis?.forensic_features ?? {},
@@ -96,8 +98,8 @@ function normalizeResult(data) {
 function normalizeDetectionRecord(item) {
   const fakeProbability = normalizeProbability(item.fake_probability ?? item.metadata?.fake_probability ?? 0);
   const humanProbability = normalizeProbability(item.human_probability ?? item.metadata?.human_probability ?? 0);
-  const verdict = normalizeVerdict(item.verdict, item.prediction, fakeProbability, humanProbability);
-  const confidence = normalizeConfidence(item.confidence, verdict === "Fake" ? fakeProbability : humanProbability);
+  const verdict = normalizeVerdict(item.verdict || item.metadata?.verdict, item.prediction);
+  const confidence = normalizeConfidence(item.confidence, confidenceProbability(verdict, fakeProbability, humanProbability));
 
   return {
     id: item.id,
@@ -106,6 +108,7 @@ function normalizeDetectionRecord(item) {
     prediction: verdict.toLowerCase(),
     isFake: verdict === "Fake",
     isUncertain: verdict === "Uncertain" || Boolean(item.metadata?.is_uncertain),
+    untrainedModel: Boolean(item.metadata?.untrained_model),
     score: Math.round(confidence),
     confidence,
     time: item.uploaded_at ? new Date(item.uploaded_at).toLocaleString() : "Unknown",
@@ -118,13 +121,12 @@ function normalizeDetectionRecord(item) {
   };
 }
 
-function normalizeVerdict(verdict, prediction, fakeProbability, humanProbability) {
-  const value = String(verdict ?? prediction ?? "").toLowerCase();
+function normalizeVerdict(verdict, prediction) {
+  const value = String(verdict || prediction || "").toLowerCase();
   if (value.includes("uncertain")) return "Uncertain";
   if (value.includes("fake") || value.includes("synthetic")) return "Fake";
   if (value.includes("human") || value.includes("real") || value.includes("authentic")) return "Human";
-  if (fakeProbability >= 0.35 && fakeProbability < 0.65) return "Uncertain";
-  return fakeProbability > humanProbability ? "Fake" : "Human";
+  return "Uncertain";
 }
 
 function normalizeProbability(value) {
@@ -139,8 +141,14 @@ function normalizeConfidence(value, probabilityFallback) {
   return number > 1 ? number : number * 100;
 }
 
-function riskFromFakeProbability(fakeProbability) {
-  if (fakeProbability >= 0.65) return "High";
-  if (fakeProbability >= 0.35) return "Medium";
-  return "Low";
+function confidenceProbability(verdict, fakeProbability, humanProbability) {
+  if (verdict === "Fake") return fakeProbability;
+  if (verdict === "Human") return humanProbability;
+  return Math.max(fakeProbability, humanProbability);
+}
+
+function riskFromVerdict(verdict) {
+  if (verdict === "Fake") return "High";
+  if (verdict === "Human") return "Low";
+  return "Medium";
 }

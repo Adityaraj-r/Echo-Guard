@@ -1,0 +1,10 @@
+services:
+  api:
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      ENABLE_DETECTION_DELETE: ${ENABLE_DETECTION_DELETE:-true}
+
+  mongo:
+    ports:
+      - "127.0.0.1:27017:27017"

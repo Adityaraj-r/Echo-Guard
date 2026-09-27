@@ -1,4 +1,5 @@
 from functools import lru_cache
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -8,6 +9,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 
 from backend.config import (
+    ALLOW_UNTRAINED_MODEL,
     CALIBRATION_PATH,
     ENHANCED_MODEL_WEIGHTS_PATH,
     IS_PRODUCTION,
@@ -22,20 +24,55 @@ from backend.ml.features import extract_forensic_features
 from backend.ml.thresholds import categorize_prediction
 from backend.ml.tensor_features import extract_multichannel_tensor
 from backend.ml.model_definition import EchoGuardCNN, EchoGuardHybridNet
+from backend.ml.readiness import ModelNotReadyError, get_model_readiness, set_model_readiness
+
+logger = logging.getLogger("echoguard.model")
 
 
 @lru_cache(maxsize=1)
 def _load_legacy_model() -> EchoGuardCNN:
-    model = EchoGuardCNN()
+    try:
+        model = EchoGuardCNN()
+    except Exception as exc:
+        set_model_readiness("runtime_unavailable", False)
+        raise ModelNotReadyError("The configured model architecture could not be initialized.") from exc
     if MODEL_WEIGHTS_PATH.exists():
-        model.load_state_dict(torch.load(MODEL_WEIGHTS_PATH, map_location=torch.device("cpu")))
-        print(f"Loaded legacy spectrogram weights from: {MODEL_WEIGHTS_PATH}")
-    elif IS_PRODUCTION:
-        raise RuntimeError(f"Model weights were not found at MODEL_WEIGHTS_PATH={MODEL_WEIGHTS_PATH}")
+        try:
+            state_dict = torch.load(MODEL_WEIGHTS_PATH, map_location=torch.device("cpu"), weights_only=True)
+            model.load_state_dict(state_dict, strict=True)
+        except Exception as exc:
+            set_model_readiness("load_failed", False)
+            if IS_PRODUCTION or not ALLOW_UNTRAINED_MODEL:
+                raise ModelNotReadyError("The configured model checkpoint could not be loaded safely.") from exc
+            logger.warning(
+                "Untrained model fallback explicitly enabled after checkpoint load failure (%s).",
+                type(exc).__name__,
+            )
+            set_model_readiness("untrained_test_mode", False)
+            model.eval()
+            return model
+        logger.info("Loaded compatible model checkpoint.")
+        set_model_readiness("ready", True)
     else:
-        print("No legacy weights found. Using initialized network. Set MODEL_WEIGHTS_PATH for production.")
+        set_model_readiness("missing", False)
+        if IS_PRODUCTION or not ALLOW_UNTRAINED_MODEL:
+            raise ModelNotReadyError("The configured model checkpoint is missing.")
+        logger.warning("Untrained model test mode explicitly enabled; predictions are not trained-model results.")
+        set_model_readiness("untrained_test_mode", False)
     model.eval()
     return model
+
+
+def initialize_model() -> bool:
+    """Load once during startup so readiness reports checkpoint compatibility."""
+    try:
+        _load_legacy_model()
+    except ModelNotReadyError as exc:
+        logger.error("Model startup check failed: %s", exc)
+    except Exception as exc:
+        set_model_readiness("runtime_unavailable", False)
+        logger.error("Model startup check failed (%s).", type(exc).__name__)
+    return bool(get_model_readiness()["ready"])
 
 
 @lru_cache(maxsize=1)
@@ -198,6 +235,7 @@ def _guard_live_voice_false_positive(
 def _build_response(fake_probability: float, category: dict, debug: dict, feature_report: dict | None = None) -> dict:
     fake_probability = float(np.clip(fake_probability, 0.0, 1.0))
     human_probability = 1 - fake_probability
+    model_state = get_model_readiness()["state"]
     return {
         "verdict": category["verdict"],
         "prediction": category["prediction"],
@@ -212,6 +250,8 @@ def _build_response(fake_probability: float, category: dict, debug: dict, featur
         "forensic_features": feature_report.get("features", {}) if feature_report else {},
         "anomalies": feature_report.get("anomalies", []) if feature_report else [],
         "debug": debug,
+        "model_status": model_state,
+        "untrained_model": model_state == "untrained_test_mode",
         "class_mapping": {
             "fake": MODEL_FAKE_CLASS_INDEX,
             "human": MODEL_HUMAN_CLASS_INDEX,

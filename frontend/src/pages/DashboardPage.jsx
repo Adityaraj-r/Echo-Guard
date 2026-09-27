@@ -32,7 +32,7 @@ export default function DashboardPage() {
   }, []);
 
   const handleHistoryError = useCallback((message) => addToast(message, "error"), [addToast]);
-  const { history, historyError, isLoadingHistory, loadHistory, removeDetection } = useDetections(handleHistoryError);
+  const { history, deletionEnabled, historyError, isLoadingHistory, loadHistory, removeDetection } = useDetections(handleHistoryError);
 
   async function runAnalysis(nextFile, endpoint = "/analyze") {
     setFile(nextFile);
@@ -101,6 +101,7 @@ export default function DashboardPage() {
             <GlassCard id="history">
               <HistorySection
                 history={history}
+                deletionEnabled={deletionEnabled}
                 isLoading={isLoadingHistory}
                 error={historyError}
                 onRefresh={loadHistory}

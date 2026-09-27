@@ -8,6 +8,7 @@ from pydantic import Field
 class Detection(Document):
     filename: str
     original_format: Optional[str] = None
+    uploaded_audio_path: Optional[str] = None
     converted_wav_path: Optional[str] = None
     waveform_image: Optional[str] = None
     spectrogram_image: Optional[str] = None
